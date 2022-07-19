@@ -82,24 +82,37 @@ export const PokemonPage: NextPage<Props> = ({ pokemon }) => {
 // You should use getStaticPaths if you’re statically pre-rendering pages that use dynamic routes
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
     // Set Array with all 200 pages that will be previously rendered
-    const allPokemons: string[] = [...Array(200)].map((value, index) => `${index + 1}`);
+    const allPokemons: string[] = [...Array(50)].map((value, index) => `${index + 1}`);
 
     return {
         // paths: [{params: {id:'1'},},{params: {id:'2'},}],
         paths: allPokemons.map(id => ({
             params: { id }
         })),
-        fallback: false
+        fallback: 'blocking'
+        // fallback: false // If paths no exist in statics, show 404 page
     }
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
     const { id } = params as { id: string };
+
+    const pokemon = await getPokemonInfo(id);
+
+    if (!pokemon) {
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false
+            }
+        }
+    }
     
     return {
         props: {
-            pokemon: await getPokemonInfo(id)
-        }
+            pokemon
+        },
+        revalidate: 86400 // 1 year
     }
 }
 
